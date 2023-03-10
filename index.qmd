@@ -1,0 +1,598 @@
+---
+title: "When selection depends on mediation: part 1"
+author: "Johan de Aguas"
+format: 
+  html:
+    fig-width: 7
+    fig-height: 4
+    fig-align: center
+    code-fold: true
+    toc: true
+fontsize: 11pt
+bibliography: references.bib
+---
+
+------------------------------------------------------------------------
+
+## Selection bias and IPW methods
+
+*Confounding bias* and *selection bias* are together the most prevalent hurdles to the validity and generalizability of causal inference results. In general, both arise from uncontrolled extraneous flows of statistical information between treatment and outcome in the analysis. Their precise characterization in the Structural Causal Models framework (SCM), and potential corrections, differ in nature:
+
+-   **Confounding bias** emerges from *open backdoor paths* between treatment and outcome in the directed acyclic graph (DAG) that represents the set of assumptions on the system's causal mechanisms. In experimental settings, (conditional) randomization of treatment assignment provides a practical solution to the problem. In observational studies, the *do*-calculus, developed by Judea Pearl [@pearl2009], constitute a complete and formal set of graphical rules to test the identifiability of the target causal parameters.
+
+-   **Selection bias** emerges from the preferential exclusion of units from the sample under analysis. It implies conditioning on a *collider* (or a descendant of a *virtual collider*), which opens backdoor paths between treatment and outcome. Besides, distributions learnt from the biased samples might not generalize to the whole population. Selection bias cannot be removed via randomization, which makes it a concern for experimental settings as well. There exist extensions of the *do*-calculus to deal with selection bias in some cases. *Inverse probability weighting* (IPW) methods are more frequently used in applied work.
+
+### Question: selection, mediation and IPW methods
+
+*Inverse probability weighting* (IPW) methods provide nonparametric statistical techniques to perform inference with biased data. In their basic presentation, they approximate the *interventional mean* of the outcome using a weighted average over the selected sample. Let:
+
+-   $(y_i)_{i=1}^N$ be a sample of outcomes for the selected (non-excluded) units
+
+-   $w_i$ be the relative inverse probability of selection, $w_i=p/p_i$, where $p$ is the population-level probability of selection, and $p_i$ is the probability of selection for unit $i$
+
+-   $v_i(a)$ be the inverse probability of assignment of treatment $a$ for unit $i$.
+
+The idea of IPW methods is motivated by the desired asymptotic result (\*):
+
+$$
+\lim_{N\rightarrow\infty} N^{-1}\sum_{i=1}^N \mathbb{I}[A_i=a] v_i(a)\cdot w_i\cdot y_i\longrightarrow \mathbb{E}[Y\mid do(A=a)]
+$$
+
+The derived finite-sample estimator is consistent if $v_i(a)\cdot w_i$ is; this is, if the probability of selection and the probability of treatment assignment are jointly correctly specified.
+
+The question that motivates the present analysis is:
+
+> *Is the IPW estimator still consistent if the probability of selection depends on a mediator of the causal effect?*
+
+To answer this question let us analyse the results of an IPW-based approach on a simple simulation with a randomized treatment assignment under two cases:
+
+1.  The selection mechanism does not depend on a mediator
+
+2.  The selection mechanism does depend on a mediator
+
+### Simple simulation setting
+
+Let us consider the SCM given by the following DAG and set of structural equations:
+
+##### The DAG:
+
+```{r}
+#| fig-width: 5
+#| message: false
+
+# DAG visualization
+library(ggplot2)
+library(dagitty)
+library(ggdag)
+
+dagify(
+  M ~ A,
+  S ~ A + M + L,
+  Y ~ A + M + L
+) %>% tidy_dagitty(layout = "nicely") %>%
+  ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+  geom_dag_point(color='white',size=0.5) +
+  geom_dag_edges() +
+  geom_dag_text(color='black') +
+  theme_dag()
+```
+
+##### Structural equations:
+
+$$
+\begin{aligned}[c]
+L &\sim\text{Nor}(0,\sigma^2_L) & &\\
+A &\sim\text{Ber}(p) & &\\
+M &= \alpha_0 + \alpha_1A + u_M & u_M &\sim\text{Nor}(0,\sigma^2_M) \\
+S &= \mathbb{I}[\gamma_0 + \gamma_1A + \gamma_2M + \gamma_3L + u_S > 0] & u_S &\sim\text{Nor}(0,\sigma^2_S) \\
+Y &= \beta_0 + \beta_1A + \beta_2M + \beta_3L + u_Y & u_Y &\sim\text{Nor}(0,\sigma^2_Y) 
+\end{aligned}
+$$
+
+Let us put this SCM as a data-generating process (DGP) in *R* code:
+
+```{r}
+#| warning: false
+#| message: false
+
+# Libraries needed
+library(DescTools)
+library(LaplacesDemon)
+library(dplyr)
+library(kableExtra)
+library(modelsummary)
+library(gt)
+library(zeallot)
+library(reshape2)
+
+# Data generating process
+dgp = function(param){
+  
+  #### Parameters
+  c(n,      # Number of samples
+    sdl,    # Stdr. dev. of selection predictor
+    p,      # Treatment assigment probability
+    a0, a1, # Parameters of A->M relation
+    sdm,    # Stdr. dev. of mediator noise
+    g0, g1, # Parameters of A->S relation
+    g2,     # Parameter of M->S relation
+    g3,     # Parameter of L->S relation
+    sds,    # Stdr. dev. of selection noise
+    b0, b1, # Parameters of A->Y relation
+    b2,     # Parameter of M->Y relation
+    b3,     # Parameter of L->Y relation
+    sdy # Stdr. dev. of selection noise
+    ) %<-% param     
+  
+  # Exogenous selection predictor
+  L = rnorm(n=n, mean=0, sd=sdl)
+  
+  # Treatment assigment
+  A = rbinom(n=n, size=1, prob=p)
+  
+  # Mediator
+  noise.M = rnorm(n=n, mean=0, sd=sdm)
+  M = a0 + a1*A + noise.M
+  
+  # Selection mechanism
+  noise.S = rnorm(n=n, mean=0, sd=sds)
+  S = ifelse(g0 + g1*A + g2*M + g3*L + noise.S > 0, 1, 0)
+  
+  # Outcome
+  noise.Y = rnorm(n=n, mean=0, sd=sdy)
+  Y = b0 + b1*A + b2*M + b3*L + noise.Y
+  
+  # true ATE
+  true.ATE = b1 + b2*a1
+  
+  # Data
+  dat = data.frame(L,A,M,S,Y)
+  
+  # Return
+  return(list(dat,true.ATE))
+}
+```
+
+------------------------------------------------------------------------
+
+## Case 1: Selection does not depend on a mediator
+
+This case is equivalent to setting $\gamma_2=0$ in the structural equation of the selection mechanism $S$. Let us simulate some noisy data:
+
+```{r}
+# Set random seed
+set.seed(7)
+
+# Parameters values
+param.1 = c(
+  n=1e3,             # Number of samples
+  sdl=1,             # Stdr. dev. of selection predictor
+  p=0.5,             # Treatment assigment probability
+  a0=0.1, a1=0.5,    # Parameters of A->M relation
+  sdm=0.4,           # Stdr. dev. of mediator noise
+  g0=-0.1, g1=0.2,   # Parameters of A->S relation
+  g2=0,              # Parameter of M->S relation ### M DOES NOT CAUSE S
+  g3=0.2,            # Parameter of L->S relation
+  sds=0.5,           # Stdr. dev. of selection noise
+  b0=-1.5, b1=0.5,   # Parameters of A->Y relation
+  b2=0.5,            # Parameter of M->Y relation
+  b3=1.8,            # Parameter of L->Y relation
+  sdy=2.7)           # Stdr. dev. of selection noise
+
+# Generate data
+dgp.1 = dgp(param.1)
+
+# Save the full data
+dat.1 = dgp.1[[1]]
+
+# Save the true ATE
+T.ATE = dgp.1[[2]]
+
+# Glimpse of the data
+head(dat.1) %>% kbl() %>% kable_styling(full_width = F)
+```
+
+We can compute the true ATE underlying this SCM:
+
+```{r}
+# True ATE
+data.frame('True ATE'=T.ATE) %>% kbl() %>% kable_styling(full_width = F)
+```
+
+------------------------------------------------------------------------
+
+### Results under no exclusion (complete data)
+
+For a moment let us pretend we observe all variables for everyone. Let us examine the most interesting models that we can fit with the simulated data, to check their ability to recover population-level parameters under noisy samples.
+
+```{r}
+# Model for M, with complete data
+mod.M = lm(M ~ A, data=dat.1)
+
+# Model for S, with complete data
+mod.S = glm(S ~ A + L, family=binomial('probit'), data=dat.1)
+
+# Model for Y, with complete data
+mod.Y = lm(Y ~ A + M + L, data=dat.1)
+
+# Model for causal effect, with complete data
+# Version 1: Controlling for predictor of Y
+mod.ate.1 = lm(Y ~ A + L, data=dat.1)
+
+# Model for causal effect, with complete data
+# Version 2: Treatment is randomized, no controls needed
+mod.ate.2 = lm(Y ~ A, data=dat.1)
+
+# All models put together
+models.full = list("M" = mod.M, "S" = mod.S, "Y" = mod.Y, "ATE (O-set)" = mod.ate.1, "ATE (no adj)" = mod.ate.2)
+
+# Summary of models
+modelsummary(models.full, statistic = "[{conf.low}, {conf.high}]",
+             estimate  = "{estimate}{stars}") 
+```
+
+Since the treatment is randomized, no *control* variables are required in the regression of $Y$ against $A$ to remove confounding bias. However, $L$ is in the $O$-set of the effect; this is, controlling for $L$ produces an asymptotically more efficient estimator. Such property is not seen in finite samples \[see last two models\].
+
+It is no surprise that, with complete data, the point-estimate for the coefficient of $A$ in the last two models lie close to the true ATE (`r T.ATE`), even under a moderately noisy DGP ($R^2\approx 0.3$).
+
+------------------------------------------------------------------------
+
+### Results under exclusion
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+#| output: false
+N0 = table(dat.1$S)[1]
+```
+
+Ignoring samples for which $S=0$ reduces sample size from `r param.1[1]` to `r param.1[1]-N0`. This is, the probability of exclusion is about `r table(dat.1$S)[1]/param.1[1]`.
+
+```{r}
+# Number of observation per selection
+# 1 = selected / observed
+# 0 = excluded
+table(dat.1$S) %>% kbl(col.names = c('S','N')) %>% kable_styling(full_width = F)
+```
+
+In contrast with the complete data case, a regression-based approach for estimating the ATE with only the selected samples **does** require controlling for $L$, since conditioning on $S$ opens two intertwined non-causal paths:
+
+-   $A\longrightarrow S\longleftarrow L\longrightarrow Y$. Here $S$ acts as a *real collider*.
+
+-   $A\longleftrightarrow u_s\longleftrightarrow L\longrightarrow Y$ . Here $S$ acts as a *virtual* collider.
+
+Unfortunately, controlling for $L$ alone **does not** remove selection bias, despite blocking such paths. This is because the distribution of $L$ in the sample does not necessarily match the distribution in the population.
+
+Let us inspect it.
+
+#### Regression-based approach:
+
+We fit a model for the outcome $Y$ against $A$, controlling for $L$, using only the selected samples:
+
+```{r}
+# Data for the selected sample
+dat.s = dat.1 %>% filter(S==1)
+N.s = nrow(dat.s)
+
+# Model for causal effect, with selected
+mod.ate.s = lm(Y ~ A + L, data=dat.s)
+modelsummary(list("ATE(S=1)" = mod.ate.s), 
+             statistic = NULL,
+             estimate  = "{estimate}{stars} [{conf.low}, {conf.high}]") 
+```
+
+The resulted 95% confidence interval for the coefficient of $A$, using only samples for which $S=1$, still covers the true ATE (`r T.ATE`). Yet, a downwards bias shrinks the point-estimate and its lower bound noticeably. Using this, we would conclude the ATE is smaller than what truly is.
+
+Let us implement an IPW-based approach to compare against:
+
+#### IPW-based approach:
+
+Given the SCM, and the assumption of $\gamma_2=0$, we can express:
+
+-   $w_i=\mathbb{P}(S=1)/\mathbb{P}(S=1\mid A_i,L_i)$
+
+-   $v_i(a)=1/\mathbb{P}(A=a) = 1/0.5 = 2$ because treatment is randomized
+
+The derived finite-sample estimator of the mean counterfactuals / potential outcomes is: $$
+\hat{Y}^a = N^{-1}\sum_{i=1}^N\frac{\mathbb{I}(A_i=a)\cdot\hat{\mathbb{P}}(S=1)}{\hat{\mathbb{P}}(A=a)\cdot\hat{\mathbb{P}}(S=1\mid A_i,L_i)}\cdot y_i
+$$
+
+Putting all ingredients together we get point-estimates $\hat{Y}^1=\hat{\mathbb{E}}[Y\mid do(A=1)]$ and $\hat{Y}^0=\hat{\mathbb{E}}[Y\mid do(A=0)]$:
+
+```{r}
+# Compute the probability of selecton for all the units selected
+# We leverage the model mod.S, trained on complete data since S, A and L are
+# always observed (Y is the only one missing) and predict only on the selected units
+prob.s.unit = predict(mod.S, newdata=dat.s, type='response')
+
+# The unconditional probability of selection can be consistently estimated 
+#... with counts from the total sample size and selected sample size
+prob.s = nrow(dat.s) / nrow(dat.1)
+
+# Since the treatment is randomized, the propensity score in the population is known at 0.5. 
+# It can also be estimated from counts in the complete dataset
+# prop.score = sum(dat.1$A==1)/nrow(dat.1)
+prop.score = 0.5
+
+# Estimated counterfactuals/potential outcomes via IPPW
+est.PO = dat.s %>% mutate(
+  prob.s.unit = as.numeric(prob.s.unit),
+  prob.s = as.numeric(prob.s),
+  prop.score = as.numeric(prop.score),
+  pro.weight = (A/prop.score) + (1-A)/(1-prop.score),
+  weights = pro.weight * prob.s * (1/prob.s.unit),
+  weighted.Y = weights * Y) %>% group_by(A) %>% 
+  summarise('PO'=sum(weighted.Y)/N.s)
+
+# Print resulted estimates
+head(est.PO) %>% kbl() %>% kable_styling(full_width = F)
+
+```
+
+Which, can be used to compute a point-estimate of the ATE: $\hat{ATE}=\hat{Y}^1-\hat{Y}^0$:
+
+```{r}
+# Print estimated ATE
+est.ATE = as.numeric(est.PO[2,2]-est.PO[1,2])
+data.frame('IPW ATE'=est.ATE) %>% kbl() %>% kable_styling(full_width = F)
+```
+
+We can see that the IPW-based approach produces a point-estimate closer to the true ATE. To get valid confidence intervals, however, a bootstrapping or asymptotic analysis need to be invoked. We can compute naïve confidence interval without resampling, using the fact:
+
+$$
+\hat{\text{var}}(\hat{\text{ATE}}) \geq \hat{\text{var}}(\hat{Y}^1)+\hat{\text{var}}(\hat{Y}^0)=(N-2)^{-2}\sum_{a\in\{0,1\}}\sum_{i=1}^N \mathbb{I}(A_i=a)\cdot \hat{v}_i(a)^2\hat{w}_i^2(Y_i-\hat{Y}^a)^2
+$$Such variance is naïve in the sense that it is overconfident due to ignoring the covariance between the potential outcomes, and the higher-order contributions of the weighting factors in the total variance. Anyway, using it will get us:
+
+```{r}
+# Estimated counterfactuals/potential outcomes via IPPW
+sd.PO = dat.s %>% mutate(
+  prob.s.unit = as.numeric(prob.s.unit),
+  prob.s = as.numeric(prob.s),
+  prop.score = as.numeric(prop.score),
+  pro.weight = (A/prop.score) + (1-A)/(1-prop.score),
+  weights = pro.weight * prob.s * (1/prob.s.unit),
+  weighted.var = weights^2 * ( A* (Y-est.PO[2,2])^2 + (1-A)* (Y-est.PO[1,2])^2)) %>% 
+  group_by(A) %>% 
+  summarise('sd'=sqrt(sum(weighted.var))/(N.s-2))
+
+# Naïve confidence interval
+naivebounds = qnorm(0.975)*sum(sd.PO[,2])
+data.frame('IPW ATE'=as.numeric(est.ATE),
+           'naïve LB'=as.numeric(est.ATE)-naivebounds,
+           'naïve UB'=as.numeric(est.ATE)+naivebounds) %>% kbl() %>% kable_styling(full_width = F)
+```
+
+As noted, the naïve confidence interval is tighter than those produced by inference on the complete data. This means such confidence interval is not statistically valid, but it can still help us visualize the convergence of IPW estimator.
+
+Now, if we simulate and repeat the DGP and same analysis for different sample sizes, consistency would be visually perceived if we see:
+
+-   Point-estimate converging to the true ATE
+
+-   Confidence intervals shrinking at a fast (\*\*) rate
+
+Let us test it. We run 20 simulations with different complete sample sizes, from $N=500$ to $N=23\,000$ \[number of complete samples from $N_s=250$ to $N_s=12\,000$\]. We repeat the procedure three times and average the results on those three repetitions. Such averages are presented in the following table:
+
+```{r}
+#| warning: false
+#| message: false
+
+# Data frame to save results from iterations
+rounds.IPPW = data.frame(N=NA, Ns=NA, EST=NA, LB=NA, UB=NA)
+
+# All sample sizes to consider
+samplesizes = round(500*exp(0.2*(0:19)))
+
+# Number of repetitions
+M = 3
+
+# Paramaters are the same as before
+param.iter = param.1
+
+# Seed
+set.seed(66)
+
+# Loop
+for(m in 1:M){
+  for(n in samplesizes){
+    
+    # Change sample size
+    param.iter[1] = n
+    
+    # Generate the data (complete and selected)
+    dat.iter = dgp(param.iter)[[1]]
+    dat.s.iter = dat.iter %>% filter(S==1)
+    
+    # Estimated probability of selection
+    N.s.iter = nrow(dat.s.iter)
+    prob.s.iter = N.s.iter / n
+    
+    # Model for S, with complete data
+    mod.S.iter = glm(S ~ A + L, family=binomial('probit'), data=dat.iter)
+    prob.s.unit.iter = predict(mod.S.iter, newdata=dat.s.iter, type='response')
+  
+    # Propensity score model
+    prop.score.iter = sum(dat.iter$A==1)/nrow(dat.iter)
+    
+    # Put everything together
+    row.iter = dat.s.iter %>% mutate(
+      prob.s.unit = as.numeric(prob.s.unit.iter),
+      prob.s = as.numeric(prob.s.iter),
+      prop.score = as.numeric(prop.score.iter),
+      pro.weight = (A/prop.score) + (1-A)/(1-prop.score),
+      weights = pro.weight * prob.s * (1/prob.s.unit),
+      weighted.Y = weights * Y) 
+    
+    # Estimated counterfactuals/potential outcomes via IPPW
+    po.iter = row.iter %>% group_by(A) %>% 
+      summarise('Y(A)'=sum(weighted.Y)/N.s.iter)
+    
+    # Estimated ATE
+    ATE.iter = as.numeric(po.iter[2,2]-po.iter[1,2])
+    
+    # Naïve variances
+    sd.PO.iter = row.iter %>% mutate(
+      weighted.var = weights^2 * ( A* (Y-po.iter[2,2])^2 + (1-A)* (Y-po.iter[1,2])^2)) %>% 
+    group_by(A) %>% 
+    summarise('sd'=sqrt(sum(weighted.var))/(N.s.iter-1))
+    
+    # Naïve confidence interval
+    naivebounds = qnorm(0.975)*sum(sd.PO.iter[,2])
+    
+    rounds.IPPW = rbind.data.frame(rounds.IPPW,
+                                   data.frame(N=n,
+                                              Ns=N.s.iter,
+                                              EST=ATE.iter,
+                                              LB=ATE.iter-naivebounds,
+                                              UB=ATE.iter+naivebounds))
+  }
+}
+# Print resulted estimates
+rounds.IPPW = rounds.IPPW[-1,] %>%
+  group_by(N) %>%
+  summarise_all(mean)
+
+head(rounds.IPPW) %>% kbl() %>% kable_styling(full_width = F)
+```
+
+An the following plot:
+
+```{r}
+### Plot results from rounds
+rounds.IPPW[,-1] %>% melt(id.vars = 'Ns') %>% 
+  ggplot(aes(x=Ns,y=value,group=variable)) + 
+  geom_point() + 
+  geom_smooth(method = lm, formula = y ~ x + I(log(x)), se = FALSE) +
+  labs(y='Value of estimate / bound', x='number of complete samples') +
+  geom_hline(yintercept=T.ATE, col = 'red') +
+  theme_bw()
+```
+
+We can appreciate that the estimator converges to the true ATE \[in red\], and its uncertainty reduce at a sustained rate; there is **convergence in probability**. In other words, the IPW-based estimator is consistent.
+
+##### Mathematical justification of consistency
+
+We can prove consistency mathematically for this SCM. However, to avoid measure-theoretic conundrums, let us consider the case for which all variables are discrete. Results are generalizable for mixed discrete-continuous cases with positive distributions (no zero-measure events).
+
+Let us assume $Y$ has support on $\{y_{(c)}\}_{c=1}^C$, and $L$ has support on $\{l_{(k)}\}_{k=1}^K$, then:
+
+$$
+\begin{aligned}
+\hat{Y}^a &= N^{-1}\sum_{i=1}^N\frac{\hat{\mathbb{P}}(S=1)}{\hat{\mathbb{P}}(A=a)\cdot\hat{\mathbb{P}}(S=1\mid A=a_i,L=l_i)}\cdot y_i\cdot \mathbb{I}(A_i=a) \\
+&= 
+N^{-1}\sum_{i=1}^N\frac{\hat{\mathbb{P}}(S=1)}{\hat{\mathbb{P}}(A=a\mid L=l_i)\cdot\hat{\mathbb{P}}(S=1\mid A=a,L=l_i)}\cdot y_i\cdot\mathbb{I}(A_i=a,S_i=1)\\
+&=
+\sum_{i=1}^N
+\frac{\hat{\mathbb{P}}(S=1)}{
+\hat{\mathbb{P}}(S=1\mid L=l_i)
+}\cdot 
+\frac{
+y_i\cdot\mathbb{I}(A_i=a,S_i=1)/N}{ 
+\hat{\mathbb{P}}(A=a\mid L=l_i,S=1)
+}\\
+&= \sum_{i=1}^N\sum_{k}\sum_{c}
+\frac{\hat{\mathbb{P}}(S=1)}{
+\hat{\mathbb{P}}(S=1\mid L=l_{(k)})
+}\cdot 
+\frac{
+y_{i}\cdot\mathbb{I}(A_i=a,L_i=l_{(k)},S_i=1)/N}{ 
+\hat{\mathbb{P}}(A=a\mid L=l_{(k)},S=1)
+}\\
+&= \sum_{k}\sum_{c}
+\frac{\hat{\mathbb{P}}(S=1)}{
+\hat{\mathbb{P}}(S=1\mid L=l_{(k)})
+}\cdot 
+\frac{
+y_{(c)}\cdot\sum_{i=1}^N\mathbb{I}(Y_i=y_{(c)},A_i=a,L_i=l_{(k)},S_i=1)/N}{ 
+\hat{\mathbb{P}}(A=a\mid L=l_{(k)},S=1)
+}\\
+&= \sum_{k}\sum_{c}
+\frac{\hat{\mathbb{P}}(S=1)}{
+\hat{\mathbb{P}}(S=1\mid L=l_{(k)})
+}\cdot 
+\frac{
+y_{(c)}\cdot\hat{\mathbb{P}}(Y=y_{(c)},A=a,L=l_{(k)}\mid S=1)}{ 
+\hat{\mathbb{P}}(A=a\mid L=l_{(k)},S=1)
+}
+\end{aligned}
+$$
+
+Assuming the propensity scores and the probability of selection are both correctly specified, all finite-sample approximations $\hat{\mathbb{P}}$ converge in the limit to the true distributions $\mathbb{P}$. Then:
+
+$$
+\begin{aligned}
+\text{plim}_{N\rightarrow\infty}
+\hat{Y}^a
+ &= 
+\sum_{k}\sum_{c}
+\frac{{\mathbb{P}}(S=1)}{
+{\mathbb{P}}(S=1\mid L=l_{(k)})
+}\cdot 
+\frac{
+y_{(c)}\cdot{\mathbb{P}}(Y=y_{(c)},A=a,L=l_{(k)}\mid S=1)}{ 
+{\mathbb{P}}(A=a\mid L=l_{(k)},S=1)
+}\\
+&= 
+\sum_{k}\sum_{c}
+\frac{{\mathbb{P}}(L=l_{(k)})}{
+{\mathbb{P}}(L=l_{(k)}\mid S=1)
+}\cdot 
+\frac{
+y_{(c)}\cdot{\mathbb{P}}(Y=y_{(c)},A=a,L=l_{(k)}\mid S=1)}{ 
+{\mathbb{P}}(A=a\mid L=l_{(k)},S=1)
+}\\
+&= 
+\sum_{k}\sum_{c}
+{\mathbb{P}}(L=l_{(k)})
+\cdot 
+y_{(c)}\cdot{\mathbb{P}}(Y=y_{(c)}\mid A=a,L=l_{(k)} S=1)\\
+&= 
+\sum_{k}
+{\mathbb{P}}(L=l_{(k)})
+\sum_{c}
+y_{(c)}\cdot{\mathbb{P}}(Y=y_{(c)}\mid A=a,L=l_{(k)}, S=1)\\
+&= 
+\sum_{k}
+{\mathbb{P}}(L=l_{(k)})
+\mathbb{E}(Y\mid A=a,L, S=1)\\
+&= 
+\mathbb{E}_L
+\mathbb{E}(Y\mid A=a,L, S=1) =\mathbb{E}[Y\mid do(A=a)]
+\end{aligned}
+$$
+
+This is, the IPW estimator converges to the true counterfactual mean given by intervention $do(A=a)$. The last equality comes from two facts:
+
+-   $L$ blocks all backdoor paths from $A$ to $Y$ when conditioning on $S=1$
+
+-   $\mathbb{P}(L=l_{(k)})$ is the population-distribution of $L$, not the sample-based
+
+------------------------------------------------------------------------
+
+## Case 2: Selection does depend on a mediator
+
+This case is equivalent to setting $\gamma_2\neq 0$ in the SCM. To analyse this case let us leverage the accumulated knowledge for the previous case, in combination with the particularities of the new case:
+
+#### Regression-based approach
+
+A regression-based approach using only the selected samples would not work, because:
+
+-   As before, conditioning on $S$ opens some backdoor paths between treatment and outcome that could be blocked by $L$, but its distribution differs in the sample from the population.
+
+-   A new backdoor path opens: $A\longleftrightarrow u_s\longleftrightarrow M\longrightarrow Y$, where $S$ acts as a virtual collider. This path, however, cannot be blocked by any valid adjustment set. Trying to block it with $M$ introduces bias by conditioning on a mediator.
+
+#### IPW-based approach
+
+Here is where our original analysis question pops up:
+
+> *Is the IPW estimator still consistent if the probability of selection depends on a mediator of the causal effect?*
+
+Consider this:
+
+-   For the IPW estimator being consistent the propensity score and the probability of selection **must be jointly correctly specified**. Since in our case the treatment assignment is randomized, the propensity score (either known or nonparametrically estimated with counts) is in fact correctly specified. This implies all responsibility for consistency lies on the model for the probability of selection.
+
+-   We know that the probability of selection depends on $M$, so for its model to be correctly specified it must use $M$.
+
+The question is then, will using $M$ to model the probability of selection lead us to a consistent estimator for the ATE?
+
+We will continue the analysis in another entry: **part 2**
