@@ -566,7 +566,7 @@ This is, the IPW estimator converges to the true counterfactual mean given by in
 
 -   $L$ blocks all backdoor paths from $A$ to $Y$ when conditioning on $S=1$
 
--   $\mathbb{P}(L=l_{(k)})$ is the population-distribution of $L$, not the sample-based
+-   $\mathbb{P}(L=l_{(k)})$ is the population-distribution of $L$
 
 ------------------------------------------------------------------------
 
