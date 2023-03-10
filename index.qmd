@@ -14,7 +14,7 @@ bibliography: references.bib
 
 ------------------------------------------------------------------------
 
-## Selection bias and IPW methods
+# Selection bias and IPW methods
 
 *Confounding bias* and *selection bias* are together the most prevalent hurdles to the validity and generalizability of causal inference results. In general, both arise from uncontrolled extraneous flows of statistical information between treatment and outcome in the analysis. Their precise characterization in the Structural Causal Models framework (SCM), and potential corrections, differ in nature:
 
@@ -22,7 +22,7 @@ bibliography: references.bib
 
 -   **Selection bias** emerges from the preferential exclusion of units from the sample under analysis. It implies conditioning on a *collider* (or a descendant of a *virtual collider*), which opens backdoor paths between treatment and outcome. Besides, distributions learnt from the biased samples might not generalize to the whole population. Selection bias cannot be removed via randomization, which makes it a concern for experimental settings as well. There exist extensions of the *do*-calculus to deal with selection bias in some cases. *Inverse probability weighting* (IPW) methods are more frequently used in applied work.
 
-### Question: selection, mediation and IPW methods
+## Question: selection, mediation and IPW methods
 
 *Inverse probability weighting* (IPW) methods provide nonparametric statistical techniques to perform inference with biased data. In their basic presentation, they approximate the *interventional mean* of the outcome using a weighted average over the selected sample. Let:
 
@@ -54,7 +54,7 @@ To answer this question let us analyse the results of an IPW-based approach on a
 
 Let us consider the SCM given by the following DAG and set of structural equations:
 
-##### The DAG:
+### The DAG:
 
 ```{r}
 #| fig-width: 5
@@ -77,7 +77,7 @@ dagify(
   theme_dag()
 ```
 
-##### Structural equations:
+### Structural equations:
 
 $$
 \begin{aligned}[c]
