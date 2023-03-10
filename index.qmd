@@ -3,7 +3,7 @@ title: "When selection depends on mediation: part 1"
 author: "Johan de Aguas"
 format: 
   html:
-    fig-width: 7
+    fig-width: 7.5
     fig-height: 4
     fig-align: center
     code-fold: true
@@ -460,8 +460,9 @@ An the following plot:
 ```{r}
 ### Plot results from rounds
 rounds.IPPW[,-1] %>% melt(id.vars = 'Ns') %>% 
+  mutate(type = ifelse(variable=='EST','EST','N. C.I.') ) %>% 
   ggplot(aes(x=Ns,y=value,group=variable)) + 
-  geom_point() + 
+  geom_point(aes(shape=type,color=type)) + 
   geom_smooth(method = lm, formula = y ~ x + I(log(x)), se = FALSE) +
   labs(y='Value of estimate / bound', x='number of complete samples') +
   geom_hline(yintercept=T.ATE, col = 'red') +

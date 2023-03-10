@@ -191,8 +191,11 @@ div.csl-indent {
   <ul>
   <li><a href="#selection-bias-and-ipw-methods" id="toc-selection-bias-and-ipw-methods" class="nav-link active" data-scroll-target="#selection-bias-and-ipw-methods">Selection bias and IPW methods</a>
   <ul class="collapse">
-  <li><a href="#question-selection-mediation-and-ipw-methods" id="toc-question-selection-mediation-and-ipw-methods" class="nav-link" data-scroll-target="#question-selection-mediation-and-ipw-methods">Question: selection, mediation and IPW methods</a></li>
+  <li><a href="#question-selection-mediation-and-ipw-methods" id="toc-question-selection-mediation-and-ipw-methods" class="nav-link" data-scroll-target="#question-selection-mediation-and-ipw-methods">Question: selection, mediation and IPW methods</a>
+  <ul class="collapse">
   <li><a href="#simple-simulation-setting" id="toc-simple-simulation-setting" class="nav-link" data-scroll-target="#simple-simulation-setting">Simple simulation setting</a></li>
+  <li><a href="#the-dag" id="toc-the-dag" class="nav-link" data-scroll-target="#the-dag">The DAG:</a></li>
+  <li><a href="#structural-equations" id="toc-structural-equations" class="nav-link" data-scroll-target="#structural-equations">Structural equations:</a></li>
   </ul></li>
   <li><a href="#case-1-selection-does-not-depend-on-a-mediator" id="toc-case-1-selection-does-not-depend-on-a-mediator" class="nav-link" data-scroll-target="#case-1-selection-does-not-depend-on-a-mediator">Case 1: Selection does not depend on a mediator</a>
   <ul class="collapse">
@@ -200,6 +203,7 @@ div.csl-indent {
   <li><a href="#results-under-exclusion" id="toc-results-under-exclusion" class="nav-link" data-scroll-target="#results-under-exclusion">Results under exclusion</a></li>
   </ul></li>
   <li><a href="#case-2-selection-does-depend-on-a-mediator" id="toc-case-2-selection-does-depend-on-a-mediator" class="nav-link" data-scroll-target="#case-2-selection-does-depend-on-a-mediator">Case 2: Selection does depend on a mediator</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -230,15 +234,15 @@ div.csl-indent {
 </header>
 
 <hr>
-<section id="selection-bias-and-ipw-methods" class="level2">
-<h2 class="anchored" data-anchor-id="selection-bias-and-ipw-methods">Selection bias and IPW methods</h2>
+<section id="selection-bias-and-ipw-methods" class="level1">
+<h1>Selection bias and IPW methods</h1>
 <p><em>Confounding bias</em> and <em>selection bias</em> are together the most prevalent hurdles to the validity and generalizability of causal inference results. In general, both arise from uncontrolled extraneous flows of statistical information between treatment and outcome in the analysis. Their precise characterization in the Structural Causal Models framework (SCM), and potential corrections, differ in nature:</p>
 <ul>
 <li><p><strong>Confounding bias</strong> emerges from <em>open backdoor paths</em> between treatment and outcome in the directed acyclic graph (DAG) that represents the set of assumptions on the system’s causal mechanisms. In experimental settings, (conditional) randomization of treatment assignment provides a practical solution to the problem. In observational studies, the <em>do</em>-calculus, developed by Judea Pearl <span class="citation" data-cites="pearl2009">(<a href="#ref-pearl2009" role="doc-biblioref">Pearl 2009</a>)</span>, constitute a complete and formal set of graphical rules to test the identifiability of the target causal parameters.</p></li>
 <li><p><strong>Selection bias</strong> emerges from the preferential exclusion of units from the sample under analysis. It implies conditioning on a <em>collider</em> (or a descendant of a <em>virtual collider</em>), which opens backdoor paths between treatment and outcome. Besides, distributions learnt from the biased samples might not generalize to the whole population. Selection bias cannot be removed via randomization, which makes it a concern for experimental settings as well. There exist extensions of the <em>do</em>-calculus to deal with selection bias in some cases. <em>Inverse probability weighting</em> (IPW) methods are more frequently used in applied work.</p></li>
 </ul>
-<section id="question-selection-mediation-and-ipw-methods" class="level3">
-<h3 class="anchored" data-anchor-id="question-selection-mediation-and-ipw-methods">Question: selection, mediation and IPW methods</h3>
+<section id="question-selection-mediation-and-ipw-methods" class="level2">
+<h2 class="anchored" data-anchor-id="question-selection-mediation-and-ipw-methods">Question: selection, mediation and IPW methods</h2>
 <p><em>Inverse probability weighting</em> (IPW) methods provide nonparametric statistical techniques to perform inference with biased data. In their basic presentation, they approximate the <em>interventional mean</em> of the outcome using a weighted average over the selected sample. Let:</p>
 <ul>
 <li><p><span class="math inline">\((y_i)_{i=1}^N\)</span> be a sample of outcomes for the selected (non-excluded) units</p></li>
@@ -259,12 +263,12 @@ div.csl-indent {
 <li><p>The selection mechanism does not depend on a mediator</p></li>
 <li><p>The selection mechanism does depend on a mediator</p></li>
 </ol>
-</section>
 <section id="simple-simulation-setting" class="level3">
 <h3 class="anchored" data-anchor-id="simple-simulation-setting">Simple simulation setting</h3>
 <p>Let us consider the SCM given by the following DAG and set of structural equations:</p>
-<section id="the-dag" class="level5">
-<h5 class="anchored" data-anchor-id="the-dag">The DAG:</h5>
+</section>
+<section id="the-dag" class="level3">
+<h3 class="anchored" data-anchor-id="the-dag">The DAG:</h3>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -289,8 +293,8 @@ div.csl-indent {
 </div>
 </div>
 </section>
-<section id="structural-equations" class="level5">
-<h5 class="anchored" data-anchor-id="structural-equations">Structural equations:</h5>
+<section id="structural-equations" class="level3">
+<h3 class="anchored" data-anchor-id="structural-equations">Structural equations:</h3>
 <p><span class="math display">\[
 \begin{aligned}[c]
 L &amp;\sim\text{Nor}(0,\sigma^2_L) &amp; &amp;\\
@@ -363,7 +367,6 @@ Y &amp;= \beta_0 + \beta_1A + \beta_2M + \beta_3L + u_Y &amp; u_Y &amp;\sim\text
 </details>
 </div>
 <hr>
-</section>
 </section>
 </section>
 <section id="case-1-selection-does-not-depend-on-a-mediator" class="level2">
@@ -1066,15 +1069,16 @@ Y &amp;= \beta_0 + \beta_1A + \beta_2M + \beta_3L + u_Y &amp; u_Y &amp;\sim\text
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="do">### Plot results from rounds</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>rounds.IPPW[,<span class="sc">-</span><span class="dv">1</span>] <span class="sc">%&gt;%</span> <span class="fu">melt</span>(<span class="at">id.vars =</span> <span class="st">'Ns'</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Ns,<span class="at">y=</span>value,<span class="at">group=</span>variable)) <span class="sc">+</span> </span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> </span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> lm, <span class="at">formula =</span> y <span class="sc">~</span> x <span class="sc">+</span> <span class="fu">I</span>(<span class="fu">log</span>(x)), <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y=</span><span class="st">'Value of estimate / bound'</span>, <span class="at">x=</span><span class="st">'number of complete samples'</span>) <span class="sc">+</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept=</span>T.ATE, <span class="at">col =</span> <span class="st">'red'</span>) <span class="sc">+</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">type =</span> <span class="fu">ifelse</span>(variable<span class="sc">==</span><span class="st">'EST'</span>,<span class="st">'EST'</span>,<span class="st">'N. C.I.'</span>) ) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Ns,<span class="at">y=</span>value,<span class="at">group=</span>variable)) <span class="sc">+</span> </span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">shape=</span>type,<span class="at">color=</span>type)) <span class="sc">+</span> </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> lm, <span class="at">formula =</span> y <span class="sc">~</span> x <span class="sc">+</span> <span class="fu">I</span>(<span class="fu">log</span>(x)), <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y=</span><span class="st">'Value of estimate / bound'</span>, <span class="at">x=</span><span class="st">'number of complete samples'</span>) <span class="sc">+</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept=</span>T.ATE, <span class="at">col =</span> <span class="st">'red'</span>) <span class="sc">+</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="720"></p>
 </div>
 </div>
 <p>We can appreciate that the estimator converges to the true ATE [in red], and its uncertainty reduce at a sustained rate; there is <strong>convergence in probability</strong>. In other words, the IPW-based estimator is consistent.</p>
@@ -1201,6 +1205,7 @@ y_{(c)}\cdot{\mathbb{P}}(Y=y_{(c)}\mid A=a,L=l_{(k)}, S=1)\\
 
 
 
+</section>
 </section>
 </section>
 
