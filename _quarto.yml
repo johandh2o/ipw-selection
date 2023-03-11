@@ -13,7 +13,9 @@ website:
 
 format:
   html:
-    theme: superhero
+    theme:
+      dark: superhero
+      light: sandstone
     css: styles.css
     toc: true
 
