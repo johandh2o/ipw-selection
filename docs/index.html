@@ -118,10 +118,10 @@ div.csl-indent {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -298,7 +298,7 @@ div.csl-indent {
 <p><span class="math display">\[
 \begin{aligned}[c]
 L &amp;\sim\text{Nor}(0,\sigma^2_L) &amp; &amp;\\
-A &amp;\sim\text{Ber}(p) &amp; &amp;\\
+A &amp;\sim\text{Ber}(q) &amp; &amp;\\
 M &amp;= \alpha_0 + \alpha_1A + u_M &amp; u_M &amp;\sim\text{Nor}(0,\sigma^2_M) \\
 S &amp;= \mathbb{I}[\gamma_0 + \gamma_1A + \gamma_2M + \gamma_3L + u_S &gt; 0] &amp; u_S &amp;\sim\text{Nor}(0,\sigma^2_S) \\
 Y &amp;= \beta_0 + \beta_1A + \beta_2M + \beta_3L + u_Y &amp; u_Y &amp;\sim\text{Nor}(0,\sigma^2_Y)
@@ -787,7 +787,7 @@ Y &amp;= \beta_0 + \beta_1A + \beta_2M + \beta_3L + u_Y &amp; u_Y &amp;\sim\text
 <p>Given the SCM, and the assumption of <span class="math inline">\(\gamma_2=0\)</span>, we can express:</p>
 <ul>
 <li><p><span class="math inline">\(w_i=\mathbb{P}(S=1)/\mathbb{P}(S=1\mid A_i,L_i)\)</span></p></li>
-<li><p><span class="math inline">\(v_i(a)=1/\mathbb{P}(A=a) = 1/0.5 = 2\)</span> because treatment is randomized</p></li>
+<li><p><span class="math inline">\(v_i(a)=1/\mathbb{P}(A=a) = 1/q\)</span> because treatment is randomized</p></li>
 </ul>
 <p>The derived finite-sample estimator of the mean counterfactuals / potential outcomes is: <span class="math display">\[
 \hat{Y}^a = N^{-1}\sum_{i=1}^N\frac{\mathbb{I}(A_i=a)\cdot\hat{\mathbb{P}}(S=1)}{\hat{\mathbb{P}}(A=a)\cdot\hat{\mathbb{P}}(S=1\mid A_i,L_i)}\cdot y_i
@@ -1171,7 +1171,7 @@ y_{(c)}\cdot{\mathbb{P}}(Y=y_{(c)}\mid A=a,L=l_{(k)}, S=1)\\
 <p>This is, the IPW estimator converges to the true counterfactual mean given by intervention <span class="math inline">\(do(A=a)\)</span>. The last equality comes from two facts:</p>
 <ul>
 <li><p><span class="math inline">\(L\)</span> blocks all backdoor paths from <span class="math inline">\(A\)</span> to <span class="math inline">\(Y\)</span> when conditioning on <span class="math inline">\(S=1\)</span></p></li>
-<li><p><span class="math inline">\(\mathbb{P}(L=l_{(k)})\)</span> is the population-distribution of <span class="math inline">\(L\)</span>, not the sample-based</p></li>
+<li><p><span class="math inline">\(\mathbb{P}(L=l_{(k)})\)</span> is the population-distribution of <span class="math inline">\(L\)</span></p></li>
 </ul>
 <hr>
 </section>

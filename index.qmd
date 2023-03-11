@@ -1,6 +1,7 @@
 ---
 title: "When selection depends on mediation: part 1"
 author: "Johan de Aguas"
+fontsize: 12pt
 format: 
   html:
     fig-width: 7.5
@@ -8,7 +9,6 @@ format:
     fig-align: center
     code-fold: true
     toc: true
-fontsize: 11pt
 bibliography: references.bib
 ---
 
