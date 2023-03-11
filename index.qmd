@@ -30,7 +30,7 @@ bibliography: references.bib
 
 -   $w_i$ be the relative inverse probability of selection, $w_i=p/p_i$, where $p$ is the population-level probability of selection, and $p_i$ is the probability of selection for unit $i$
 
--   $v_i(a)$ be the inverse probability of assignment of treatment $a$ for unit $i$.
+-   $v_i(a)$ be the inverse probability of assignment of treatment $a$ for unit $i$
 
 The idea of IPW methods is motivated by the desired asymptotic result (\*):
 
