@@ -82,7 +82,7 @@ dagify(
 $$
 \begin{aligned}[c]
 L &\sim\text{Nor}(0,\sigma^2_L) & &\\
-A &\sim\text{Ber}(p) & &\\
+A &\sim\text{Ber}(q) & &\\
 M &= \alpha_0 + \alpha_1A + u_M & u_M &\sim\text{Nor}(0,\sigma^2_M) \\
 S &= \mathbb{I}[\gamma_0 + \gamma_1A + \gamma_2M + \gamma_3L + u_S > 0] & u_S &\sim\text{Nor}(0,\sigma^2_S) \\
 Y &= \beta_0 + \beta_1A + \beta_2M + \beta_3L + u_Y & u_Y &\sim\text{Nor}(0,\sigma^2_Y) 
@@ -292,7 +292,7 @@ Given the SCM, and the assumption of $\gamma_2=0$, we can express:
 
 -   $w_i=\mathbb{P}(S=1)/\mathbb{P}(S=1\mid A_i,L_i)$
 
--   $v_i(a)=1/\mathbb{P}(A=a) = 1/0.5 = 2$ because treatment is randomized
+-   $v_i(a)=1/\mathbb{P}(A=a) = 1/q$ because treatment is randomized
 
 The derived finite-sample estimator of the mean counterfactuals / potential outcomes is: $$
 \hat{Y}^a = N^{-1}\sum_{i=1}^N\frac{\mathbb{I}(A_i=a)\cdot\hat{\mathbb{P}}(S=1)}{\hat{\mathbb{P}}(A=a)\cdot\hat{\mathbb{P}}(S=1\mid A_i,L_i)}\cdot y_i
