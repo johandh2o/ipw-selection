@@ -118,10 +118,12 @@ div.csl-indent {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark.min.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -175,6 +177,9 @@ div.csl-indent {
  <span class="menu-text">Blog</span></a>
   </li>  
 </ul>
+              <div class="quarto-toggle-container">
+                  <a href="" class="quarto-color-scheme-toggle nav-link" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+              </div>
               <div id="quarto-search" class="" title="Search"></div>
           </div> <!-- /navcollapse -->
       </div> <!-- /container-fluid -->
@@ -247,7 +252,7 @@ div.csl-indent {
 <ul>
 <li><p><span class="math inline">\((y_i)_{i=1}^N\)</span> be a sample of outcomes for the selected (non-excluded) units</p></li>
 <li><p><span class="math inline">\(w_i\)</span> be the relative inverse probability of selection, <span class="math inline">\(w_i=p/p_i\)</span>, where <span class="math inline">\(p\)</span> is the population-level probability of selection, and <span class="math inline">\(p_i\)</span> is the probability of selection for unit <span class="math inline">\(i\)</span></p></li>
-<li><p><span class="math inline">\(v_i(a)\)</span> be the inverse probability of assignment of treatment <span class="math inline">\(a\)</span> for unit <span class="math inline">\(i\)</span>.</p></li>
+<li><p><span class="math inline">\(v_i(a)\)</span> be the inverse probability of assignment of treatment <span class="math inline">\(a\)</span> for unit <span class="math inline">\(i\)</span></p></li>
 </ul>
 <p>The idea of IPW methods is motivated by the desired asymptotic result (*):</p>
 <p><span class="math display">\[
@@ -786,11 +791,11 @@ Y &amp;= \beta_0 + \beta_1A + \beta_2M + \beta_3L + u_Y &amp; u_Y &amp;\sim\text
 <h4 class="anchored" data-anchor-id="ipw-based-approach">IPW-based approach:</h4>
 <p>Given the SCM, and the assumption of <span class="math inline">\(\gamma_2=0\)</span>, we can express:</p>
 <ul>
-<li><p><span class="math inline">\(w_i=\mathbb{P}(S=1)/\mathbb{P}(S=1\mid A_i,L_i)\)</span></p></li>
+<li><p><span class="math inline">\(w_i=\mathbb{P}(S=1)/\mathbb{P}(S=1\mid A=a_i,L=l_i)\)</span></p></li>
 <li><p><span class="math inline">\(v_i(a)=1/\mathbb{P}(A=a) = 1/q\)</span> because treatment is randomized</p></li>
 </ul>
 <p>The derived finite-sample estimator of the mean counterfactuals / potential outcomes is: <span class="math display">\[
-\hat{Y}^a = N^{-1}\sum_{i=1}^N\frac{\mathbb{I}(A_i=a)\cdot\hat{\mathbb{P}}(S=1)}{\hat{\mathbb{P}}(A=a)\cdot\hat{\mathbb{P}}(S=1\mid A_i,L_i)}\cdot y_i
+\hat{Y}^a = N^{-1}\sum_{i=1}^N\frac{\mathbb{I}(A_i=a)\cdot\hat{\mathbb{P}}(S=1)}{\hat{\mathbb{P}}(A=a)\cdot\hat{\mathbb{P}}(S=1\mid A=a_i,L=l_i)}\cdot y_i
 \]</span></p>
 <p>Putting all ingredients together we get point-estimates <span class="math inline">\(\hat{Y}^1=\hat{\mathbb{E}}[Y\mid do(A=1)]\)</span> and <span class="math inline">\(\hat{Y}^0=\hat{\mathbb{E}}[Y\mid do(A=0)]\)</span>:</p>
 <div class="cell">
@@ -873,7 +878,7 @@ Y &amp;= \beta_0 + \beta_1A + \beta_2M + \beta_3L + u_Y &amp; u_Y &amp;\sim\text
 </div>
 <p>We can see that the IPW-based approach produces a point-estimate closer to the true ATE. To get valid confidence intervals, however, a bootstrapping or asymptotic analysis need to be invoked. We can compute naïve confidence interval without resampling, using the fact:</p>
 <p><span class="math display">\[
-\hat{\text{var}}(\hat{\text{ATE}}) \geq \hat{\text{var}}(\hat{Y}^1)+\hat{\text{var}}(\hat{Y}^0)=(N-2)^{-2}\sum_{a\in\{0,1\}}\sum_{i=1}^N \mathbb{I}(A_i=a)\cdot \hat{v}_i(a)^2\hat{w}_i^2(Y_i-\hat{Y}^a)^2
+\hat{\text{var}}(\hat{\text{ATE}}) \geq \hat{\text{var}}(\hat{Y}^1)+\hat{\text{var}}(\hat{Y}^0)=(N-2)^{-2}\sum_{a\in\{0,1\}}\sum_{i=1}^N \mathbb{I}(A_i=a)\cdot \hat{v}_i(a)^2\hat{w}_i^2(y_i-\hat{Y}^a)^2
 \]</span>Such variance is naïve in the sense that it is overconfident due to ignoring the covariance between the potential outcomes, and the higher-order contributions of the weighting factors in the total variance. Anyway, using it will get us:</p>
 <div class="cell">
 <details>
@@ -1072,7 +1077,7 @@ Y &amp;= \beta_0 + \beta_1A + \beta_2M + \beta_3L + u_Y &amp; u_Y &amp;\sim\text
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">type =</span> <span class="fu">ifelse</span>(variable<span class="sc">==</span><span class="st">'EST'</span>,<span class="st">'EST'</span>,<span class="st">'N. C.I.'</span>) ) <span class="sc">%&gt;%</span> </span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>Ns,<span class="at">y=</span>value,<span class="at">group=</span>variable)) <span class="sc">+</span> </span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">shape=</span>type,<span class="at">color=</span>type)) <span class="sc">+</span> </span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> lm, <span class="at">formula =</span> y <span class="sc">~</span> x <span class="sc">+</span> <span class="fu">I</span>(<span class="fu">log</span>(x)), <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> lm, <span class="at">formula =</span> y <span class="sc">~</span> x <span class="sc">+</span> <span class="fu">I</span>(<span class="fu">sqrt</span>(x)), <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span> <span class="do">## O(N^0.5) convergence</span></span>
 <span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y=</span><span class="st">'Value of estimate / bound'</span>, <span class="at">x=</span><span class="st">'number of complete samples'</span>) <span class="sc">+</span></span>
 <span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept=</span>T.ATE, <span class="at">col =</span> <span class="st">'red'</span>) <span class="sc">+</span></span>
 <span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1234,6 +1239,121 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
   toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  let localAlternateSentinel = 'alternate';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
   const icon = "";
   const anchorJS = new window.AnchorJS();
   anchorJS.options = {

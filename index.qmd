@@ -290,12 +290,12 @@ Let us implement an IPW-based approach to compare against:
 
 Given the SCM, and the assumption of $\gamma_2=0$, we can express:
 
--   $w_i=\mathbb{P}(S=1)/\mathbb{P}(S=1\mid A_i,L_i)$
+-   $w_i=\mathbb{P}(S=1)/\mathbb{P}(S=1\mid A=a_i,L=l_i)$
 
 -   $v_i(a)=1/\mathbb{P}(A=a) = 1/q$ because treatment is randomized
 
 The derived finite-sample estimator of the mean counterfactuals / potential outcomes is: $$
-\hat{Y}^a = N^{-1}\sum_{i=1}^N\frac{\mathbb{I}(A_i=a)\cdot\hat{\mathbb{P}}(S=1)}{\hat{\mathbb{P}}(A=a)\cdot\hat{\mathbb{P}}(S=1\mid A_i,L_i)}\cdot y_i
+\hat{Y}^a = N^{-1}\sum_{i=1}^N\frac{\mathbb{I}(A_i=a)\cdot\hat{\mathbb{P}}(S=1)}{\hat{\mathbb{P}}(A=a)\cdot\hat{\mathbb{P}}(S=1\mid A=a_i,L=l_i)}\cdot y_i
 $$
 
 Putting all ingredients together we get point-estimates $\hat{Y}^1=\hat{\mathbb{E}}[Y\mid do(A=1)]$ and $\hat{Y}^0=\hat{\mathbb{E}}[Y\mid do(A=0)]$:
@@ -341,7 +341,7 @@ data.frame('IPW ATE'=est.ATE) %>% kbl() %>% kable_styling(full_width = F)
 We can see that the IPW-based approach produces a point-estimate closer to the true ATE. To get valid confidence intervals, however, a bootstrapping or asymptotic analysis need to be invoked. We can compute naïve confidence interval without resampling, using the fact:
 
 $$
-\hat{\text{var}}(\hat{\text{ATE}}) \geq \hat{\text{var}}(\hat{Y}^1)+\hat{\text{var}}(\hat{Y}^0)=(N-2)^{-2}\sum_{a\in\{0,1\}}\sum_{i=1}^N \mathbb{I}(A_i=a)\cdot \hat{v}_i(a)^2\hat{w}_i^2(Y_i-\hat{Y}^a)^2
+\hat{\text{var}}(\hat{\text{ATE}}) \geq \hat{\text{var}}(\hat{Y}^1)+\hat{\text{var}}(\hat{Y}^0)=(N-2)^{-2}\sum_{a\in\{0,1\}}\sum_{i=1}^N \mathbb{I}(A_i=a)\cdot \hat{v}_i(a)^2\hat{w}_i^2(y_i-\hat{Y}^a)^2
 $$Such variance is naïve in the sense that it is overconfident due to ignoring the covariance between the potential outcomes, and the higher-order contributions of the weighting factors in the total variance. Anyway, using it will get us:
 
 ```{r}
@@ -463,7 +463,7 @@ rounds.IPPW[,-1] %>% melt(id.vars = 'Ns') %>%
   mutate(type = ifelse(variable=='EST','EST','N. C.I.') ) %>% 
   ggplot(aes(x=Ns,y=value,group=variable)) + 
   geom_point(aes(shape=type,color=type)) + 
-  geom_smooth(method = lm, formula = y ~ x + I(log(x)), se = FALSE) +
+  geom_smooth(method = lm, formula = y ~ x + I(sqrt(x)), se = FALSE) + ## O(N^0.5) convergence
   labs(y='Value of estimate / bound', x='number of complete samples') +
   geom_hline(yintercept=T.ATE, col = 'red') +
   theme_bw()
