@@ -44,7 +44,7 @@ The question that motivates the present analysis is:
 
 > *Is the IPW estimator still consistent if the probability of selection depends on a mediator of the causal effect?*
 
-To answer this question let us analyse the results of an IPW-based approach on a simple simulation with a randomized treatment assignment under two cases:
+To answer this question let us analyse the results of an IPW-based approach on a simple simulation with a randomized treatment assignment and **when the selection mechanism only hides the outcome**, for two cases:
 
 1.  The selection mechanism does not depend on a mediator
 
@@ -87,7 +87,9 @@ M &= \alpha_0 + \alpha_1A + u_M & u_M &\sim\text{Nor}(0,\sigma^2_M) \\
 S &= \mathbb{I}[\gamma_0 + \gamma_1A + \gamma_2M + \gamma_3L + u_S > 0] & u_S &\sim\text{Nor}(0,\sigma^2_S) \\
 Y &= \beta_0 + \beta_1A + \beta_2M + \beta_3L + u_Y & u_Y &\sim\text{Nor}(0,\sigma^2_Y) 
 \end{aligned}
-$$
+$$ \### Selection mechanism:
+
+When $S=1$ for a particular unit, we get to observe their whole data $(L,A,M,Y)$. When $S=1$, only the final outcome $Y$ is missing, so we get to observe $(L,A,M)$.
 
 Let us put this SCM as a data-generating process (DGP) in *R* code:
 
