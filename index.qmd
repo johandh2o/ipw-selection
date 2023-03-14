@@ -87,7 +87,10 @@ M &= \alpha_0 + \alpha_1A + u_M & u_M &\sim\text{Nor}(0,\sigma^2_M) \\
 S &= \mathbb{I}[\gamma_0 + \gamma_1A + \gamma_2M + \gamma_3L + u_S > 0] & u_S &\sim\text{Nor}(0,\sigma^2_S) \\
 Y &= \beta_0 + \beta_1A + \beta_2M + \beta_3L + u_Y & u_Y &\sim\text{Nor}(0,\sigma^2_Y) 
 \end{aligned}
-$$ \### Selection mechanism:
+$$ 
+
+
+### Selection mechanism:
 
 When $S=1$ for a particular unit, we get to observe their whole data $(L,A,M,Y)$. When $S=1$, only the final outcome $Y$ is missing, so we get to observe $(L,A,M)$.
 
